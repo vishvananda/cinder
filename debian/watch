@@ -1,0 +1,2 @@
+version=3
+http://tarballs.openstack.org/cinder/ cinder-(.*).tar.gz
