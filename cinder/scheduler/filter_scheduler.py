@@ -58,9 +58,11 @@ class FilterScheduler(driver.Scheduler):
         """
         vol = request_spec['volume_properties']
         filter_properties['size'] = vol['size']
-        filter_properties['availability_zone'] = vol.get('availability_zone')
         filter_properties['user_id'] = vol.get('user_id')
         filter_properties['metadata'] = vol.get('metadata')
+
+        if vol.get('availability_zone'):
+            filter_properties['availability_zone'] = vol.get('availability_zone')
 
     def schedule_create_volume(self, context, request_spec, filter_properties):
         weighed_host = self._schedule(context, request_spec,
