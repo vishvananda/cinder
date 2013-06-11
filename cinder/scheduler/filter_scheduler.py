@@ -22,6 +22,7 @@ Weighing Functions.
 
 import operator
 
+from cinder import db
 from cinder import exception
 from cinder import flags
 from cinder.openstack.common import importutils
@@ -89,6 +90,12 @@ class FilterScheduler(driver.Scheduler):
                                          allow_reschedule=True,
                                          snapshot_id=snapshot_id,
                                          image_id=image_id)
+
+        service = db.service_get_by_host_and_topic(context.elevated(),
+                                                   host, 'cinder-volume')
+        values = {'availability_zone': service['availability_zone']}
+        db.volume_update(context, volume_id, values)
+
 
     def _post_select_populate_filter_properties(self, filter_properties,
                                                 host_state):
