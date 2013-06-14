@@ -171,8 +171,10 @@ class API(base.Base):
                                 'd_consumed': _consumed('volumes')})
                 raise exception.VolumeLimitExceeded(allowed=quotas['volumes'])
 
-        if availability_zone is None:
-            availability_zone = FLAGS.storage_availability_zone
+        #NOTE(bcwaldon): Disabling this so we don't filter by availability zone
+        # if the user isn't explicitly requesting it
+        #if availability_zone is None:
+        #    availability_zone = FLAGS.storage_availability_zone
 
         if not volume_type and not source_volume:
             volume_type = volume_types.get_default_volume_type()
