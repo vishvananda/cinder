@@ -24,6 +24,7 @@ import functools
 
 from oslo.config import cfg
 
+from cinder import context
 from cinder.db import base
 from cinder import exception
 from cinder import flags
@@ -278,6 +279,26 @@ class API(base.Base):
                 image_id,
                 request_spec=request_spec,
                 filter_properties=filter_properties)
+
+    def list_availability_zones(self):
+        """Describe the known availability zones
+
+        :retval list of dicts, each with a 'name' and 'available' key
+        """
+        topic = FLAGS.volume_topic
+        ctxt = context.get_admin_context()
+        services = self.db.service_get_all_by_topic(ctxt, topic)
+        az_data = [(s['availability_zone'], s['disabled']) for s in services]
+
+        disabled_map = {}
+        for (az_name, disabled) in az_data:
+            tracked_disabled = disabled_map.get(az_name, True)
+            disabled_map[az_name] = tracked_disabled and disabled
+
+        azs = [{'name': name, 'available': not disabled}
+               for (name, disabled) in disabled_map.items()]
+
+        return tuple(azs)
 
     @wrap_check_policy
     def delete(self, context, volume, force=False):
