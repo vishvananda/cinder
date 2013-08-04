@@ -53,7 +53,8 @@ def upgrade(migrate_engine):
                ForeignKey('snapshots.id')),
         Column('key', String(255)),
         Column('value', Text),
-        mysql_engine='InnoDB'
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     try:
