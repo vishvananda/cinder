@@ -16,11 +16,6 @@ if [ "$1" = "configure" ]; then
     chmod 0750 /etc/cinder
     chmod 0440 /etc/sudoers.d/cinder_sudoers
 
-    if ! grep -q sql_connection /etc/cinder/cinder.conf
-    then
-        su -s /bin/sh -c 'cinder-manage db sync' cinder
-    fi
-
     if [ -e /var/lib/cinder/cinder.sqlite ]; then
         chown cinder:cinder /var/lib/cinder/cinder.sqlite
         chown 0600 /var/lib/cinder/cinder.sqlite
