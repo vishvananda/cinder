@@ -15,6 +15,7 @@ pre-start script
 end script
 
 script
+    set +e
     runcon -t cinder-volume_t /bin/true 2>&1 >/dev/null
     if [ $? -eq 0 ]; then
         exec su -s /bin/sh -c "exec runcon -t cinder-volume_t cinder-volume --config-file=/etc/cinder/cinder.conf" cinder
