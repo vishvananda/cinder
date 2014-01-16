@@ -580,10 +580,42 @@ class LVMISCSIDriver(LVMVolumeDriver, driver.ISCSIDriver):
 
         if out:
             volume = out.split()
-            data['total_capacity_gb'] = float(volume[1].replace(',', '.'))
-            data['free_capacity_gb'] = float(volume[2].replace(',', '.'))
+            data['total_capacity_gb'] = (float(volume[1].replace(',', '.')) /
+                                         (self.configuration.lvm_mirrors + 1))
+            if self.configuration.lvm_mirrors:
+                data['free_capacity_gb'] = self._get_free_capacity_gb()
+            else:
+                data['free_capacity_gb'] = float(volume[2].replace(',', '.'))
 
         self._stats = data
+
+    def _get_free_capacity_gb(self):
+        out, err = self._execute('pvs', '--noheadings', '--nosuffix',
+                                 '--unit=G', '-o', 'vg_name,free',
+                                 run_as_root=True)
+        disks = []
+        for line in out.splitlines():
+            volume_group, size = line.split(None, 1)
+            if volume_group == self.configuration.volume_group:
+                disks.append(float(size.replace(',', '.')))
+
+        free_capacity = 0.0
+        # NOTE(vish): Ignores the size needed for mirror log since it
+        #             is essentially a rounding error when speaking in
+        #             gigabytes.
+        while True:
+            disks = sorted([a for a in disks if a > 0.0], reverse=True)
+            if len(disks) <= self.configuration.lvm_mirrors:
+                break
+            # consume the smallest disk
+            disk = disks[-1]
+            disks = disks[:-1]
+            # match extents for each mirror on the largest disks
+            for index in range(self.configuration.lvm_mirrors):
+                disks[index] -= disk
+            free_capacity += disk
+
+        return free_capacity
 
     def _iscsi_location(self, ip, target, iqn, lun=None):
         return "%s:%s,%s %s %s" % (ip, self.configuration.iscsi_port,

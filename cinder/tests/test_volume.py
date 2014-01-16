@@ -1040,6 +1040,20 @@ class ISCSITestCase(DriverTestCase):
         self.assertEquals(stats['total_capacity_gb'], float('5.52'))
         self.assertEquals(stats['free_capacity_gb'], float('0.52'))
 
+    def test_get_mirrored_volume_capacity(self):
+        def _emulate_pvs_execute(_command, *_args, **_kwargs):
+            out = "  foo               100.0\n"
+            out += "  cinder-volumes        0\n"
+            out += "  cinder-volumes     10.0\n"
+            out += "  cinder-volumes     10.0\n"
+            out += "  cinder-volumes    100.0\n"
+            return out, None
+
+        self.volume.driver.set_execute(_emulate_pvs_execute)
+        self.volume.driver.configuration.lvm_mirrors = 1
+        result = self.volume.driver._get_free_capacity_gb()
+        self.assertEquals(result, 20.0)
+
 
 class FibreChannelTestCase(DriverTestCase):
     """Test Case for FibreChannelDriver"""
